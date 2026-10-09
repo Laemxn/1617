@@ -63,6 +63,11 @@
 </head>
 <body>
 
+  <!-- Elemento de Audio -->
+  <audio id="miAudio">
+    <source src="sonido.mp3" type="audio/mpeg">
+  </audio>
+
   <div class="slider">
     <div class="slides">
       <img src="Imagen1.jpg?v=2" alt="Imagen 1">
@@ -72,6 +77,42 @@
       <img src="Imagen5.jpeg?v=2" alt="Imagen 5">
     </div>
   </div>
+
+  <script>
+    const audio = document.getElementById('miAudio');
+
+    // Desbloquea el audio con el primer toque o clic en la pantalla/control remoto de la TV
+    function desbloquearAudio() {
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(() => {});
+      document.removeEventListener('click', desbloquearAudio);
+      document.removeEventListener('keydown', desbloquearAudio);
+    }
+
+    document.addEventListener('click', desbloquearAudio);
+    document.addEventListener('keydown', desbloquearAudio);
+
+    // Sincroniza el audio con el ciclo de la animación (50 segundos en total)
+    // La imagen 5 aparece exactamente del segundo 40 al 50.
+    setInterval(() => {
+      let tiempoActual = (Date.now() / 1000) % 50; // Ciclo de 50s
+      
+      // Si el ciclo entra en los últimos 10 segundos (cuando está la Imagen 5)
+      if (tiempoActual >= 40 && tiempoActual < 50) {
+        if (audio.paused) {
+          audio.currentTime = 0; // Lo reinicia al principio por si acaso
+          audio.play().catch(() => {});
+        }
+      } else {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      }
+    }, 500); // Revisa cada medio segundo
+  </script>
 
 </body>
 </html>
