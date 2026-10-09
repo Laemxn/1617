@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Pantalla TV - SC 3015</title>
-  
   <meta http-equiv="refresh" content="300">
 
   <style>
@@ -32,7 +31,7 @@
       display: flex;
       width: 500%;
       height: 100%;
-      animation: carrusel 50s infinite;
+      transition: margin-left 1s ease-in-out; /* Transición suave entre imágenes */
     }
 
     .slides img {
@@ -57,25 +56,6 @@
       cursor: pointer;
       box-shadow: 0 4px 15px rgba(0,0,0,0.8);
     }
-
-    @keyframes carrusel {
-      0%   { margin-left: 0; }
-      16%  { margin-left: 0; }
-
-      20%  { margin-left: -100vw; }
-      36%  { margin-left: -100vw; }
-
-      40%  { margin-left: -200vw; }
-      56%  { margin-left: -200vw; }
-
-      60%  { margin-left: -300vw; }
-      76%  { margin-left: -300vw; }
-
-      80%  { margin-left: -400vw; }
-      96%  { margin-left: -400vw; }
-
-      100% { margin-left: 0; }
-    }
   </style>
 </head>
 <body>
@@ -87,7 +67,7 @@
   </audio>
 
   <div class="slider">
-    <div class="slides">
+    <div class="slides" id="sliderContainer">
       <img src="Imagen1.jpg?v=2" alt="Imagen 1">
       <img src="Imagen2.jpg?v=2" alt="Imagen 2">
       <img src="Imagen3.jpg?v=2" alt="Imagen 3">
@@ -99,41 +79,39 @@
   <script>
     const audio = document.getElementById('miAudio');
     const btn = document.getElementById('btnAudio');
+    const slider = document.getElementById('sliderContainer');
+    
+    let indiceActual = 0;
     let audioHabilitado = false;
-    let inicioAnimacion = Date.now();
+    const totalImagenes = 5;
 
     function activarSonidoDefinitivo() {
       audio.play().then(() => {
         audio.pause();
         audio.currentTime = 0;
         audioHabilitado = true;
-        inicioAnimacion = Date.now(); // Resetea el ciclo exacto al presionar el botón
         btn.style.display = 'none';
       }).catch(err => {
         console.log("Error al activar:", err);
       });
     }
 
-    // Monitorea el ciclo exacto de 50s vinculado al momento en que se habilita
+    // Cambia de imagen cada 10 segundos (5 imágenes = 50 segundos totales)
     setInterval(() => {
-      if (!audioHabilitado) return;
+      indiceActual = (indiceActual + 1) % totalImagenes;
+      slider.style.marginLeft = `-${indiceActual * 100}vw`;
 
-      let tiempoTranscurridosMs = Date.now() - inicioAnimacion;
-      let tiempoActual = (tiempoTranscurridosMs / 1000) % 50; 
-      
-      // La imagen 5 se muestra en el bloque de 80% a 100% de la animación (del segundo 40 al 50)
-      if (tiempoActual >= 40 && tiempoActual < 50) {
-        if (audio.paused) {
+      // Si la imagen actual es la número 5 (índice 4)
+      if (audioHabilitado) {
+        if (indiceActual === 4) {
           audio.currentTime = 0;
           audio.play().catch(() => {});
-        }
-      } else {
-        if (!audio.paused) {
+        } else {
           audio.pause();
           audio.currentTime = 0;
         }
       }
-    }, 200); // Revisa cada 200 milisegundos para mayor precisión
+    }, 10000); // 10 segundos por cada imagen
   </script>
 
 </body>
