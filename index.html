@@ -42,7 +42,6 @@
       background-color: black;
     }
 
-    /* Estilo para el botón de desbloqueo en la TV */
     #btnAudio {
       position: absolute;
       top: 20px;
@@ -81,10 +80,8 @@
 </head>
 <body>
 
-  <!-- Botón visible temporalmente para desbloquear el audio en la TV -->
   <button id="btnAudio" onclick="activarSonidoDefinitivo()">🔊 ACTIVAR SONIDO</button>
 
-  <!-- Elemento de Audio -->
   <audio id="miAudio" preload="auto">
     <source src="Sonido.mp3" type="audio/mpeg">
   </audio>
@@ -103,25 +100,28 @@
     const audio = document.getElementById('miAudio');
     const btn = document.getElementById('btnAudio');
     let audioHabilitado = false;
+    let inicioAnimacion = Date.now();
 
     function activarSonidoDefinitivo() {
       audio.play().then(() => {
         audio.pause();
         audio.currentTime = 0;
         audioHabilitado = true;
-        btn.style.display = 'none'; // Oculta el botón una vez presionado
+        inicioAnimacion = Date.now(); // Resetea el ciclo exacto al presionar el botón
+        btn.style.display = 'none';
       }).catch(err => {
         console.log("Error al activar:", err);
       });
     }
 
-    // Sincroniza el audio con el ciclo de la animación (50 segundos en total)
+    // Monitorea el ciclo exacto de 50s vinculado al momento en que se habilita
     setInterval(() => {
-      if (!audioHabilitado) return; // Si no se ha presionado el botón, no intenta reproducir
+      if (!audioHabilitado) return;
 
-      let tiempoActual = (Date.now() / 1000) % 50; 
+      let tiempoTranscurridosMs = Date.now() - inicioAnimacion;
+      let tiempoActual = (tiempoTranscurridosMs / 1000) % 50; 
       
-      // Últimos 10 segundos (Imagen 5)
+      // La imagen 5 se muestra en el bloque de 80% a 100% de la animación (del segundo 40 al 50)
       if (tiempoActual >= 40 && tiempoActual < 50) {
         if (audio.paused) {
           audio.currentTime = 0;
@@ -133,7 +133,7 @@
           audio.currentTime = 0;
         }
       }
-    }, 500);
+    }, 200); // Revisa cada 200 milisegundos para mayor precisión
   </script>
 
 </body>
