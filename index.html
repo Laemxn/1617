@@ -1,1 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pantalla TV - SC 3015</title>
+  
+  <meta http-equiv="refresh" content="300">
 
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      background: black;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .slider {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slides {
+      display: flex;
+      width: 500%;
+      height: 100%;
+      animation: carrusel 50s infinite;
+    }
+
+    .slides img {
+      width: 100vw;
+      height: 100vh;
+      object-fit: fill;
+      background-color: black;
+    }
+
+    @keyframes carrusel {
+      0%   { margin-left: 0; }
+      16%  { margin-left: 0; }
+
+      20%  { margin-left: -100vw; }
+      36%  { margin-left: -100vw; }
+
+      40%  { margin-left: -200vw; }
+      56%  { margin-left: -200vw; }
+
+      60%  { margin-left: -300vw; }
+      76%  { margin-left: -300vw; }
+
+      80%  { margin-left: -400vw; }
+      96%  { margin-left: -400vw; }
+
+      100% { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slider">
+    <div class="slides">
+      <img src="imagen1.jpg?v=2" alt="Imagen 1">
+      <img src="imagen2.jpg?v=2" alt="Imagen 2">
+      <img src="imagen3.jpg?v=2" alt="Imagen 3">
+      <img src="imagen4.jpg?v=2" alt="Imagen 4">
+      <img src="imagen5.jpg?v=2" alt="Imagen 5">
+    </div>
+  </div>
+
+</body>
+</html>
