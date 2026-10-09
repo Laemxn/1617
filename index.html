@@ -18,6 +18,7 @@
       background: black;
       width: 100vw;
       height: 100vh;
+      position: relative;
     }
 
     .slider {
@@ -39,6 +40,23 @@
       height: 100vh;
       object-fit: fill;
       background-color: black;
+    }
+
+    /* Estilo para el botón de desbloqueo en la TV */
+    #btnAudio {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      background: #ff0000;
+      color: white;
+      border: 3px solid white;
+      padding: 15px 30px;
+      font-size: 22px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.8);
     }
 
     @keyframes carrusel {
@@ -63,8 +81,11 @@
 </head>
 <body>
 
-  <!-- Elemento de Audio corregido con 'S' mayúscula -->
-  <audio id="miAudio">
+  <!-- Botón visible temporalmente para desbloquear el audio en la TV -->
+  <button id="btnAudio" onclick="activarSonidoDefinitivo()">🔊 ACTIVAR SONIDO</button>
+
+  <!-- Elemento de Audio -->
+  <audio id="miAudio" preload="auto">
     <source src="Sonido.mp3" type="audio/mpeg">
   </audio>
 
@@ -80,22 +101,27 @@
 
   <script>
     const audio = document.getElementById('miAudio');
+    const btn = document.getElementById('btnAudio');
+    let audioHabilitado = false;
 
-    function desbloquearAudio() {
+    function activarSonidoDefinitivo() {
       audio.play().then(() => {
         audio.pause();
         audio.currentTime = 0;
-      }).catch(() => {});
-      document.removeEventListener('click', desbloquearAudio);
-      document.removeEventListener('keydown', desbloquearAudio);
+        audioHabilitado = true;
+        btn.style.display = 'none'; // Oculta el botón una vez presionado
+      }).catch(err => {
+        console.log("Error al activar:", err);
+      });
     }
 
-    document.addEventListener('click', desbloquearAudio);
-    document.addEventListener('keydown', desbloquearAudio);
-
+    // Sincroniza el audio con el ciclo de la animación (50 segundos en total)
     setInterval(() => {
-      let tiempoActual = (Date.now() / 1000) % 50;
+      if (!audioHabilitado) return; // Si no se ha presionado el botón, no intenta reproducir
+
+      let tiempoActual = (Date.now() / 1000) % 50; 
       
+      // Últimos 10 segundos (Imagen 5)
       if (tiempoActual >= 40 && tiempoActual < 50) {
         if (audio.paused) {
           audio.currentTime = 0;
