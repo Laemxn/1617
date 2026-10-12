@@ -29,45 +29,28 @@
 
     .slides {
       display: flex;
-      width: 500%;
+      width: 600%; /* Cambiado a 600% porque ahora son 6 elementos (1 video + 5 imágenes) */
       height: 100%;
-      transition: margin-left 1s ease-in-out; /* Transición suave entre imágenes */
+      transition: margin-left 1s ease-in-out;
     }
 
-    .slides img {
+    .slides img, 
+    .slides video {
       width: 100vw;
       height: 100vh;
       object-fit: fill;
       background-color: black;
     }
-
-    #btnAudio {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 9999;
-      background: #ff0000;
-      color: white;
-      border: 3px solid white;
-      padding: 15px 30px;
-      font-size: 22px;
-      font-weight: bold;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-    }
   </style>
 </head>
 <body>
 
-  <button id="btnAudio" onclick="activarSonidoDefinitivo()">🔊 ACTIVAR SONIDO</button>
-
-  <audio id="miAudio" preload="auto">
-    <source src="Sonido.mp3" type="audio/mpeg">
-  </audio>
-
   <div class="slider">
     <div class="slides" id="sliderContainer">
+      <!-- Elemento 1: Video con sonido -->
+      <video id="miVideo" src="Video.mp4" preload="auto"></video>
+      
+      <!-- Elementos 2 al 6: Las 5 imágenes -->
       <img src="Imagen1.jpg?v=2" alt="Imagen 1">
       <img src="Imagen2.jpg?v=2" alt="Imagen 2">
       <img src="Imagen3.jpg?v=2" alt="Imagen 3">
@@ -77,41 +60,39 @@
   </div>
 
   <script>
-    const audio = document.getElementById('miAudio');
-    const btn = document.getElementById('btnAudio');
     const slider = document.getElementById('sliderContainer');
+    const video = document.getElementById('miVideo');
     
     let indiceActual = 0;
-    let audioHabilitado = false;
-    const totalImagenes = 5;
+    const totalElementos = 6; // 1 video + 5 imágenes = 6 elementos en total (60 segundos de ciclo)
 
-    function activarSonidoDefinitivo() {
-      audio.play().then(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        audioHabilitado = true;
-        btn.style.display = 'none';
-      }).catch(err => {
-        console.log("Error al activar:", err);
+    // Función para iniciar la reproducción del video con sonido de forma segura
+    function iniciarReproduccion() {
+      video.muted = false;
+      video.play().catch(error => {
+        console.log("El navegador bloqueó el autoplay con sonido. Intentando silenciado inicial...", error);
+        video.muted = true;
+        video.play();
       });
     }
 
-    // Cambia de imagen cada 10 segundos (5 imágenes = 50 segundos totales)
+    // Ejecutar al cargar la página
+    iniciarReproduccion();
+
+    // Cambiar de elemento cada 10 segundos
     setInterval(() => {
-      indiceActual = (indiceActual + 1) % totalImagenes;
+      indiceActual = (indiceActual + 1) % totalElementos;
       slider.style.marginLeft = `-${indiceActual * 100}vw`;
 
-      // Si la imagen actual es la número 5 (índice 4)
-      if (audioHabilitado) {
-        if (indiceActual === 4) {
-          audio.currentTime = 0;
-          audio.play().catch(() => {});
-        } else {
-          audio.pause();
-          audio.currentTime = 0;
-        }
+      // Si volvemos a la diapositiva 0 (el video), reiniciamos su tiempo y reproducimos
+      if (indiceActual === 0) {
+        video.currentTime = 0;
+        iniciarReproduccion();
+      } else {
+        // Si estamos en las imágenes, pausamos el video para ahorrar recursos
+        video.pause();
       }
-    }, 10000); // 10 segundos por cada imagen
+    }, 10000); // 10 segundos por cada diapositiva
   </script>
 
 </body>
