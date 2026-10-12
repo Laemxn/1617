@@ -29,7 +29,7 @@
 
     .slides {
       display: flex;
-      width: 600%; /* Cambiado a 600% porque ahora son 6 elementos (1 video + 5 imágenes) */
+      width: 600%;
       height: 100%;
       transition: margin-left 1s ease-in-out;
     }
@@ -47,8 +47,8 @@
 
   <div class="slider">
     <div class="slides" id="sliderContainer">
-      <!-- Elemento 1: Video con sonido -->
-      <video id="miVideo" src="Video.mp4" preload="auto"></video>
+      <!-- Elemento 1: Video con el nombre exacto de tu repositorio -->
+      <video id="miVideo" src="Entrada.MP4" preload="auto"></video>
       
       <!-- Elementos 2 al 6: Las 5 imágenes -->
       <img src="Imagen1.jpg?v=2" alt="Imagen 1">
@@ -64,9 +64,8 @@
     const video = document.getElementById('miVideo');
     
     let indiceActual = 0;
-    const totalElementos = 6; // 1 video + 5 imágenes = 6 elementos en total (60 segundos de ciclo)
+    const totalElementos = 6;
 
-    // Función para iniciar la reproducción del video con sonido de forma segura
     function iniciarReproduccion() {
       video.muted = false;
       video.play().catch(error => {
@@ -76,23 +75,19 @@
       });
     }
 
-    // Ejecutar al cargar la página
     iniciarReproduccion();
 
-    // Cambiar de elemento cada 10 segundos
     setInterval(() => {
       indiceActual = (indiceActual + 1) % totalElementos;
       slider.style.marginLeft = `-${indiceActual * 100}vw`;
 
-      // Si volvemos a la diapositiva 0 (el video), reiniciamos su tiempo y reproducimos
       if (indiceActual === 0) {
         video.currentTime = 0;
         iniciarReproduccion();
       } else {
-        // Si estamos en las imágenes, pausamos el video para ahorrar recursos
         video.pause();
       }
-    }, 10000); // 10 segundos por cada diapositiva
+    }, 10000);
   </script>
 
 </body>
