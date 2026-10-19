@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Pantalla TV - SC 3015</title>
-  <meta http-equiv="refresh" content="300">
+  
+  <!-- Nota: Quité el meta refresh de 300 segundos. 
+       Si la página se recarga cada 5 minutos, podría interrumpir un video 
+       a la mitad de su reproducción. Si lo necesitas para actualizar el repo, 
+       considera poner un tiempo mayor (ej. 3600 para 1 hora). -->
 
   <style>
     * {
@@ -29,65 +33,107 @@
 
     .slides {
       display: flex;
-      width: 600%;
       height: 100%;
       transition: margin-left 1s ease-in-out;
     }
 
+    /* flex-shrink: 0 evita que los elementos se aplasten al agregar muchos */
     .slides img, 
     .slides video {
       width: 100vw;
       height: 100vh;
-      object-fit: fill;
+      object-fit: fill; 
       background-color: black;
+      flex-shrink: 0; 
     }
   </style>
 </head>
 <body>
 
   <div class="slider">
+    <!-- El id ahora se usa para leer automáticamente los elementos -->
     <div class="slides" id="sliderContainer">
-      <!-- Elemento 1: Video con el nombre exacto de tu repositorio -->
-      <video id="miVideo" src="Entrada.MP4" preload="auto"></video>
       
-      <!-- Elementos 2 al 6: Las 5 imágenes -->
-      <img src="Imagen1.jpg?v=2" alt="Imagen 1">
-      <img src="Imagen2.jpg?v=2" alt="Imagen 2">
-      <img src="Imagen3.jpg?v=2" alt="Imagen 3">
-      <img src="Imagen4.jpg?v=2" alt="Imagen 4">
-      <img src="Imagen5.jpeg?v=2" alt="Imagen 5">
+      <!-- Puedes agregar cualquier cantidad de videos e imágenes en el orden que prefieras -->
+      <video src="video1.mp4" preload="auto"></video>
+      <img src="imagen1.png" alt="Imagen 1">
+      <img src="imagen2.png" alt="Imagen 2">
+      <img src="imagen3.png" alt="Imagen 3">
+      <img src="imagen4.png" alt="Imagen 4">
+      <img src="imagen5.png" alt="Imagen 5">
+      
     </div>
   </div>
 
   <script>
     const slider = document.getElementById('sliderContainer');
-    const video = document.getElementById('miVideo');
+    const elementos = slider.children; // Detecta automáticamente todos los img y video
+    const totalElementos = elementos.length;
     
+    // Asigna el ancho de la caja dinámicamente según cuántos archivos pusiste
+    slider.style.width = `${totalElementos * 100}vw`;
+
     let indiceActual = 0;
-    const totalElementos = 6;
+    let temporizador;
 
-    function iniciarReproduccion() {
-      video.muted = false;
-      video.play().catch(error => {
-        console.log("El navegador bloqueó el autoplay con sonido. Intentando silenciado inicial...", error);
-        video.muted = true;
-        video.play();
+    function reproducirElementoActual() {
+      // 1. Limpiar cualquier conteo anterior
+      clearTimeout(temporizador);
+
+      // 2. Pausar y reiniciar todos los videos en caso de que hubieran quedado corriendo
+      Array.from(elementos).forEach(el => {
+        if (el.tagName === 'VIDEO') {
+          el.pause();
+          el.currentTime = 0;
+        }
       });
-    }
 
-    iniciarReproduccion();
+      // 3. Obtener el elemento que toca mostrar
+      const elementoActual = elementos[indiceActual];
 
-    setInterval(() => {
-      indiceActual = (indiceActual + 1) % totalElementos;
+      // 4. Mover el carrusel visualmente
       slider.style.marginLeft = `-${indiceActual * 100}vw`;
 
-      if (indiceActual === 0) {
-        video.currentTime = 0;
-        iniciarReproduccion();
+      // 5. Decidir qué hacer dependiendo de si es Video o Imagen
+      if (elementoActual.tagName === 'VIDEO') {
+        
+        // Es un video: reproducir y esperar a que termine
+        elementoActual.muted = false;
+        elementoActual.play().catch(error => {
+          console.log("Autoplay bloqueado por el navegador. Silenciando para forzar reproducción...", error);
+          elementoActual.muted = true;
+          elementoActual.play();
+        });
+
+        // Evento que se dispara automáticamente cuando el video finaliza
+        elementoActual.onended = () => {
+          avanzarSiguiente();
+        };
+
+        // Si el video falla (ej. error de carga), saltamos al siguiente para que la TV no se quede trabada
+        elementoActual.onerror = () => {
+          avanzarSiguiente();
+        };
+
       } else {
-        video.pause();
+        
+        // Es una imagen: programar el salto a los 10 segundos (10000 milisegundos)
+        temporizador = setTimeout(() => {
+          avanzarSiguiente();
+        }, 10000);
+        
       }
-    }, 10000);
+    }
+
+    function avanzarSiguiente() {
+      // Avanzar el índice y reiniciar si llega al final
+      indiceActual = (indiceActual + 1) % totalElementos;
+      reproducirElementoActual();
+    }
+
+    // Iniciar el ciclo por primera vez
+    reproducirElementoActual();
+
   </script>
 
 </body>
