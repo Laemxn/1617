@@ -49,7 +49,7 @@
     <!-- El script leerá todo lo que pongas aquí adentro automáticamente -->
     <div class="slides" id="sliderContainer">
       
-      <!-- Video 1 -->
+      <!-- Video 1 (Solo se reproduce al iniciar la página) -->
       <video src="Entrada.mp4" preload="auto"></video>
       
       <!-- Imágenes -->
@@ -61,7 +61,7 @@
       <img src="imagen4.png" alt="Imagen 4">
       <img src="imagen5.png" alt="Imagen 5">
 
-       <!-- Video 2 -->
+      <!-- Video Final -->
       <video src="Final.mp4" preload="auto"></video>
       
     </div>
@@ -124,8 +124,14 @@
     }
 
     function avanzarSiguiente() {
-      // Avanza un lugar y vuelve a empezar si llega al final
-      indiceActual = (indiceActual + 1) % totalElementos;
+      indiceActual++;
+      
+      // Si llega al final (después del último elemento), 
+      // vuelve al índice 1 (es decir, la "imagen1.png") omitiendo la "Entrada.mp4"
+      if (indiceActual >= totalElementos) {
+        indiceActual = 1; 
+      }
+      
       reproducirElementoActual();
     }
 
