@@ -32,6 +32,7 @@
       transition: margin-left 1s ease-in-out;
     }
 
+    /* flex-shrink: 0 evita que los elementos se aplasten al agregar muchos archivos */
     .slides img, 
     .slides video {
       width: 100vw;
@@ -45,13 +46,24 @@
 <body>
 
   <div class="slider">
+    <!-- El script leerá todo lo que pongas aquí adentro automáticamente -->
     <div class="slides" id="sliderContainer">
+      
+      <!-- Video 1 -->
       <video src="Entrada.mp4" preload="auto"></video>
+      
+      <!-- Imágenes -->
       <img src="imagen1.png" alt="Imagen 1">
       <img src="imagen2.png" alt="Imagen 2">
+      
+      <!-- Más Imágenes -->
       <img src="imagen3.png" alt="Imagen 3">
       <img src="imagen4.png" alt="Imagen 4">
       <img src="imagen5.png" alt="Imagen 5">
+
+       <!-- Video 2 -->
+      <video src="Final.mp4" preload="auto"></video>
+      
     </div>
   </div>
 
@@ -60,14 +72,17 @@
     const elementos = slider.children;
     const totalElementos = elementos.length;
     
+    // Ajusta el ancho del carrusel dependiendo de cuántos archivos haya
     slider.style.width = `${totalElementos * 100}vw`;
 
     let indiceActual = 0;
     let temporizador;
 
     function reproducirElementoActual() {
+      // 1. Limpiamos cualquier cronómetro activo
       clearTimeout(temporizador);
 
+      // 2. Pausamos y reiniciamos todos los videos por seguridad
       Array.from(elementos).forEach(el => {
         if (el.tagName === 'VIDEO') {
           el.pause();
@@ -75,35 +90,46 @@
         }
       });
 
+      // 3. Obtenemos el elemento que toca mostrar
       const elementoActual = elementos[indiceActual];
+      
+      // 4. Movemos la pantalla
       slider.style.marginLeft = `-${indiceActual * 100}vw`;
 
+      // 5. Decidimos qué hacer
       if (elementoActual.tagName === 'VIDEO') {
         
-        // Intenta reproducir con sonido por defecto
+        // Intentamos reproducir el video con sonido
         elementoActual.muted = false; 
         
         elementoActual.play().catch(error => {
-          // Si el navegador sigue bloqueando el audio, lo silencia para no trabar la pantalla
+          // Si la TV o la PC bloquean el audio automático, lo silencia para que no se trabe
           console.log("El navegador bloqueó el audio automático.", error);
           elementoActual.muted = true;
           elementoActual.play();
         });
 
+        // Cuando el video termine por completo, avanza al siguiente
         elementoActual.onended = () => avanzarSiguiente();
+        
+        // Si hay un error al cargar el video, lo salta para no quedarse en negro
         elementoActual.onerror = () => avanzarSiguiente();
 
       } else {
+        
+        // Si es una imagen, espera 10 segundos (10000 ms) y avanza
         temporizador = setTimeout(() => avanzarSiguiente(), 10000);
+        
       }
     }
 
     function avanzarSiguiente() {
+      // Avanza un lugar y vuelve a empezar si llega al final
       indiceActual = (indiceActual + 1) % totalElementos;
       reproducirElementoActual();
     }
 
-    // Arranca solo, sin botones
+    // Arranca automáticamente al abrir la página
     reproducirElementoActual();
 
   </script>
