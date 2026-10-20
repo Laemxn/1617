@@ -32,7 +32,6 @@
       transition: margin-left 1s ease-in-out;
     }
 
-    /* flex-shrink: 0 evita que los elementos se aplasten */
     .slides img, 
     .slides video {
       width: 100vw;
@@ -48,8 +47,8 @@
   <div class="slider">
     <div class="slides" id="sliderContainer">
       
-      <!-- 1. Video de Entrada (Solo se reproduce al arrancar) -->
-      <video src="Entrada.mp4" preload="auto"></video>
+      <!-- 1. Video de Entrada (Inicia silenciado y con playsinline para evitar bloqueos del navegador) -->
+      <video src="Entrada.mp4" preload="auto" muted playsinline></video>
       
       <!-- 2. Imágenes intermedias -->
       <img src="imagen1.png" alt="Imagen 1">
@@ -58,8 +57,8 @@
       <img src="imagen4.png" alt="Imagen 4">
       <img src="imagen5.png" alt="Imagen 5">
 
-      <!-- 3. Video Final (Se reproduce al final de las imágenes) -->
-      <video src="Final.mp4" preload="auto"></video>
+      <!-- 3. Video Final -->
+      <video src="Final.mp4" preload="auto" playsinline></video>
       
     </div>
   </div>
@@ -77,6 +76,7 @@
     function reproducirElementoActual() {
       clearTimeout(temporizador);
 
+      // Pausar y reiniciar todos los videos
       Array.from(elementos).forEach(el => {
         if (el.tagName === 'VIDEO') {
           el.pause();
@@ -88,13 +88,22 @@
       slider.style.marginLeft = `-${indiceActual * 100}vw`;
 
       if (elementoActual.tagName === 'VIDEO') {
-        elementoActual.muted = false; 
-        
-        elementoActual.play().catch(error => {
-          console.log("El navegador bloqueó el audio automático.", error);
-          elementoActual.muted = true;
-          elementoActual.play();
-        });
+        // Intentar reproducir el video
+        let playPromise = elementoActual.play();
+
+        if (playPromise !== undefined) {
+          playPromise.then(_ => {
+            // Reproducción iniciada con éxito
+          }).catch(error => {
+            console.log("Reproducción automática bloqueada o error:", error);
+            // Si falla, intentamos forzarlo silenciado
+            elementoActual.muted = true;
+            elementoActual.play().catch(e => {
+              // Si de plano falla el video, avanzamos automáticamente para evitar pantalla negra
+              avanzarSiguiente();
+            });
+          });
+        }
 
         elementoActual.onended = () => avanzarSiguiente();
         elementoActual.onerror = () => avanzarSiguiente();
