@@ -47,7 +47,7 @@
   <div class="slider">
     <div class="slides" id="sliderContainer">
       
-      <!-- 1. Video de Entrada (Inicia silenciado y con playsinline para evitar bloqueos del navegador) -->
+      <!-- 1. Video de Entrada -->
       <video src="Entrada.mp4" preload="auto" muted playsinline></video>
       
       <!-- 2. Imágenes intermedias -->
@@ -58,7 +58,7 @@
       <img src="imagen5.png" alt="Imagen 5">
 
       <!-- 3. Video Final -->
-      <video src="Final.mp4" preload="auto" playsinline></video>
+      <video src="Final.mp4" preload="auto" muted playsinline></video>
       
     </div>
   </div>
@@ -88,25 +88,22 @@
       slider.style.marginLeft = `-${indiceActual * 100}vw`;
 
       if (elementoActual.tagName === 'VIDEO') {
-        // Intentar reproducir el video
-        let playPromise = elementoActual.play();
-
-        if (playPromise !== undefined) {
-          playPromise.then(_ => {
-            // Reproducción iniciada con éxito
-          }).catch(error => {
-            console.log("Reproducción automática bloqueada o error:", error);
-            // Si falla, intentamos forzarlo silenciado
-            elementoActual.muted = true;
-            elementoActual.play().catch(e => {
-              // Si de plano falla el video, avanzamos automáticamente para evitar pantalla negra
+        // Damos un pequeño respiro a la TV para que procese el cambio de slide antes de reproducir
+        setTimeout(() => {
+          let playPromise = elementoActual.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.log("Error de reproducción en TV:", error);
               avanzarSiguiente();
             });
-          });
-        }
+          }
+        }, 300);
 
         elementoActual.onended = () => avanzarSiguiente();
-        elementoActual.onerror = () => avanzarSiguiente();
+        elementoActual.onerror = () => {
+          console.log("Error de formato en la TV, saltando...");
+          avanzarSiguiente();
+        };
 
       } else {
         // Las imágenes duran 10 segundos
@@ -117,17 +114,16 @@
     function avanzarSiguiente() {
       indiceActual++;
       
-      // Cuando llega al final de todo, salta de nuevo a la imagen1 (índice 1) 
-      // para evitar volver a reproducir "Entrada.mp4"
       if (indiceActual >= totalElementos) {
-        indiceActual = 1; 
+        indiceActual = 1; // Salta a la imagen 1 al terminar el ciclo
       }
       
       reproducirElementoActual();
     }
 
-    // Arranca automáticamente al abrir la página
-    reproducirElementoActual();
+    window.addEventListener('DOMContentLoaded', () => {
+      reproducirElementoActual();
+    });
   </script>
 
 </body>
