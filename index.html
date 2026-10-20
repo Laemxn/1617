@@ -19,110 +19,120 @@
       position: relative;
     }
 
+    /* Contenedor principal que ocupa toda la pantalla */
     .slider {
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
       position: relative;
+      background: black;
+      overflow: hidden;
     }
 
-    .slides {
-      display: flex;
-      height: 100%;
-      transition: margin-left 1s ease-in-out;
-    }
-
-    .slides img, 
-    .slides video {
+    /* Cada elemento (imagen o video) se superpone en el mismo espacio exacto */
+    .slide-item {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: fill; 
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.8s ease-in-out;
+      object-fit: fill;
       background-color: black;
-      flex-shrink: 0; 
+    }
+
+    /* Elemento activo visible */
+    .slide-item.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
 
-  <div class="slider">
-    <div class="slides" id="sliderContainer">
-      
-      <!-- 1. Video de Entrada -->
-      <video src="Entrada.mp4" preload="auto" muted playsinline></video>
-      
-      <!-- 2. Imágenes intermedias -->
-      <img src="imagen1.png" alt="Imagen 1">
-      <img src="imagen2.png" alt="Imagen 2">
-      <img src="imagen3.png" alt="Imagen 3">
-      <img src="imagen4.png" alt="Imagen 4">
-      <img src="imagen5.png" alt="Imagen 5">
+  <div class="slider" id="sliderContainer">
+    
+    <!-- 1. Video de Entrada -->
+    <video class="slide-item" src="Entrada.mp4" preload="auto" muted playsinline></video>
+    
+    <!-- 2. Imágenes intermedias -->
+    <img class="slide-item" src="imagen1.png" alt="Imagen 1">
+    <img class="slide-item" src="imagen2.png" alt="Imagen 2">
+    <img class="slide-item" src="imagen3.png" alt="Imagen 3">
+    <img class="slide-item" src="imagen4.png" alt="Imagen 4">
+    <img class="slide-item" src="imagen5.png" alt="Imagen 5">
 
-      <!-- 3. Video Final -->
-      <video src="Final.mp4" preload="auto" muted playsinline></video>
-      
-    </div>
+    <!-- 3. Video Final -->
+    <video class="slide-item" src="Final.mp4" preload="auto" muted playsinline></video>
+    
   </div>
 
   <script>
-    const slider = document.getElementById('sliderContainer');
-    const elementos = slider.children;
+    const elementos = document.querySelectorAll('.slide-item');
     const totalElementos = elementos.length;
-    
-    slider.style.width = `${totalElementos * 100}vw`;
-
     let indiceActual = 0;
     let temporizador;
 
-    function reproducirElementoActual() {
+    function mostrarElemento(indice) {
       clearTimeout(temporizador);
 
-      // Pausar y reiniciar todos los videos
-      Array.from(elementos).forEach(el => {
+      // Pausar y resetear todos los videos primero
+      elementos.forEach((el, i) => {
         if (el.tagName === 'VIDEO') {
           el.pause();
           el.currentTime = 0;
         }
+        // Quitar la clase activa de todos
+        el.classList.remove('active');
       });
 
-      const elementoActual = elementos[indiceActual];
-      slider.style.marginLeft = `-${indiceActual * 100}vw`;
+      // Activar solo el elemento actual
+      const actual = elementos[indice];
+      actual.classList.add('active');
 
-      if (elementoActual.tagName === 'VIDEO') {
-        // Damos un pequeño respiro a la TV para que procese el cambio de slide antes de reproducir
+      if (actual.tagName === 'VIDEO') {
+        // Reproducir el video con un pequeño margen para que la TV lo procese
         setTimeout(() => {
-          let playPromise = elementoActual.play();
+          let playPromise = actual.play();
           if (playPromise !== undefined) {
             playPromise.catch(error => {
-              console.log("Error de reproducción en TV:", error);
+              console.log("Error al reproducir video en la TV:", error);
               avanzarSiguiente();
             });
           }
-        }, 300);
+        }, 200);
 
-        elementoActual.onended = () => avanzarSiguiente();
-        elementoActual.onerror = () => {
-          console.log("Error de formato en la TV, saltando...");
+        // Cuando el video termine, avanza al siguiente
+        actual.onended = () => avanzarSiguiente();
+        actual.onerror = () => {
+          console.log("Error de formato de video en TV, saltando...");
           avanzarSiguiente();
         };
 
       } else {
-        // Las imágenes duran 10 segundos
-        temporizador = setTimeout(() => avanzarSiguiente(), 10000);
+        // Si es imagen, dura exactamente 10 segundos
+        temporizador = setTimeout(() => {
+          avanzarSiguiente();
+        }, 10000);
       }
     }
 
     function avanzarSiguiente() {
       indiceActual++;
       
+      // Si llega al final, regresa a la imagen 1 (índice 1) evitando repetir "Entrada.mp4"
       if (indiceActual >= totalElementos) {
-        indiceActual = 1; // Salta a la imagen 1 al terminar el ciclo
+        indiceActual = 1; 
       }
       
-      reproducirElementoActual();
+      mostrarElemento(indiceActual);
     }
 
+    // Iniciar al cargar la página
     window.addEventListener('DOMContentLoaded', () => {
-      reproducirElementoActual();
+      mostrarElemento(indiceActual);
     });
   </script>
 
