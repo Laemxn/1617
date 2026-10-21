@@ -55,7 +55,7 @@
   <div class="slider" id="sliderContainer">
     
     <!-- 1. Video de Entrada -->
-    <video class="slide-item" src="Entrada.mp4" preload="auto" muted playsinline></video>
+    <video class="slide-item" src="Entrada.mp4" preload="auto" muted playsinline webkit-playsinline></video>
     
     <!-- 2. Imágenes intermedias -->
     <img class="slide-item" src="imagen1.png" alt="Imagen 1">
@@ -65,7 +65,7 @@
     <img class="slide-item" src="imagen5.png" alt="Imagen 5">
 
     <!-- 3. Video Final -->
-    <video class="slide-item" src="Final.mp4" preload="auto" muted playsinline></video>
+    <video class="slide-item" src="Final.mp4" preload="auto" muted playsinline webkit-playsinline></video>
     
   </div>
 
@@ -93,21 +93,18 @@
       actual.classList.add('active');
 
       if (actual.tagName === 'VIDEO') {
-        // Forzar la recarga para que el reproductor de la TV lo procese
-        actual.load();
-
-        // Reproducir el video con un pequeño margen para que la TV lo procese
-        setTimeout(() => {
-          let playPromise = actual.play();
-          if (playPromise !== undefined) {
-            playPromise.then(() => {
-              console.log("Reproduciendo video índice:", indice);
-            }).catch(error => {
-              console.log("Error al reproducir video en la TV, saltando:", error);
-              avanzarSiguiente();
-            });
-          }
-        }, 400);
+        // Asegurar que el video esté listo para reproducirse
+        actual.currentTime = 0;
+        
+        let playPromise = actual.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            console.log("Reproduciendo video índice:", indice);
+          }).catch(error => {
+            console.log("Error al reproducir video en la TV, saltando:", error);
+            avanzarSiguiente();
+          });
+        }
 
         // Cuando el video termine, avanza al siguiente
         actual.onended = () => {
@@ -135,3 +132,25 @@
       if (indiceActual >= totalElementos) {
         indiceActual = 1; 
       }
+      
+      mostrarElemento(indiceActual);
+    }
+
+    // Iniciar la secuencia al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      // Pequeño retardo para asegurar que el DOM de la TV esté listo
+      setTimeout(() => {
+        mostrarElemento(indiceActual);
+      }, 500);
+    });
+
+    // Truco de respaldo: Si la TV requiere interacción táctil o con control remoto para desbloquear el motor multimedia
+    window.addEventListener('click', () => {
+      const actual = elementos[indiceActual];
+      if (actual.tagName === 'VIDEO' && actual.paused) {
+        actual.play().catch(e => console.log(e));
+      }
+    }, { once: true });
+  </script>
+</body>
+</html>
