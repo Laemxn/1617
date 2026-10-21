@@ -93,21 +93,30 @@
       actual.classList.add('active');
 
       if (actual.tagName === 'VIDEO') {
+        // Forzar la recarga para que el reproductor de la TV lo procese
+        actual.load();
+
         // Reproducir el video con un pequeño margen para que la TV lo procese
         setTimeout(() => {
           let playPromise = actual.play();
           if (playPromise !== undefined) {
-            playPromise.catch(error => {
-              console.log("Error al reproducir video en la TV:", error);
+            playPromise.then(() => {
+              console.log("Reproduciendo video índice:", indice);
+            }).catch(error => {
+              console.log("Error al reproducir video en la TV, saltando:", error);
               avanzarSiguiente();
             });
           }
-        }, 200);
+        }, 400);
 
         // Cuando el video termine, avanza al siguiente
-        actual.onended = () => avanzarSiguiente();
+        actual.onended = () => {
+          actual.onended = null;
+          avanzarSiguiente();
+        };
+
         actual.onerror = () => {
-          console.log("Error de formato de video en TV, saltando...");
+          console.log("Error de formato de video en TV o archivo no encontrado, saltando...");
           avanzarSiguiente();
         };
 
@@ -126,15 +135,3 @@
       if (indiceActual >= totalElementos) {
         indiceActual = 1; 
       }
-      
-      mostrarElemento(indiceActual);
-    }
-
-    // Iniciar al cargar la página
-    window.addEventListener('DOMContentLoaded', () => {
-      mostrarElemento(indiceActual);
-    });
-  </script>
-
-</body>
-</html>
