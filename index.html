@@ -48,22 +48,24 @@
 
   <div class="slider" id="sliderContainer">
     
-    <!-- Quitamos el muted estricto de aquí para permitir audio -->
+    <!-- Índice 0 -->
     <video class="slide-item" src="Entrada.mp4" preload="auto" playsinline webkit-playsinline></video>
     
+    <!-- Índices 1 al 5 -->
     <img class="slide-item" src="imagen1.png" alt="Imagen 1">
     <img class="slide-item" src="imagen2.png" alt="Imagen 2">
     <img class="slide-item" src="imagen3.png" alt="Imagen 3">
     <img class="slide-item" src="imagen4.png" alt="Imagen 4">
     <img class="slide-item" src="imagen5.png" alt="Imagen 5">
 
+    <!-- Índice 6 -->
     <video class="slide-item" src="Final.mp4" preload="auto" playsinline webkit-playsinline></video>
     
   </div>
 
   <script>
     const elementos = document.querySelectorAll('.slide-item');
-    const totalElementos = elementos.length;
+    const totalElementos = elementos.length; // Debe ser 7 en total
     let indiceActual = 0;
     let temporizador = null;
     let timeoutSeguridadVideo = null;
@@ -88,17 +90,15 @@
           actual.load();
           actual.currentTime = 0;
           
-          // Truco para Smart TV: Forzar el sonido activado mediante JS en tiempo de ejecución
           actual.muted = false; 
-          actual.volume = 1.0; // Volumen al máximo
+          actual.volume = 1.0;
 
           let playPromise = actual.play();
           if (playPromise !== undefined) {
             playPromise.then(() => {
-              console.log("Reproduciendo video con audio, índice:", indice);
+              console.log("Reproduciendo video en índice:", indice);
             }).catch(error => {
-              console.log("Bloqueo de audio detectado por la TV, intentando reproducir en silencio...", error);
-              // Plan de respaldo: Si la TV bloquea el audio por políticas de autoplay, lo silencia para que al menos el video corra
+              console.log("Audio bloqueado, intentando en silencio...", error);
               actual.muted = true;
               actual.play();
             });
@@ -123,11 +123,12 @@
           }, duracionEstimadaMs);
 
         } catch (e) {
-          console.log("Excepción al reproducir video con audio:", e);
+          console.log("Excepción al reproducir video:", e);
           avanzarSiguiente();
         }
 
       } else {
+        // Duración de las imágenes: 10 segundos
         temporizador = setTimeout(() => {
           avanzarSiguiente();
         }, 10000);
@@ -136,9 +137,12 @@
 
     function avanzarSiguiente() {
       indiceActual++;
+      
+      // Si el índice supera el último elemento (llega a 7), se reinicia a 0 (Entrada.mp4)
       if (indiceActual >= totalElementos) {
         indiceActual = 0; 
       }
+      
       mostrarElemento(indiceActual);
     }
 
@@ -174,7 +178,6 @@
       }, 1000);
     });
 
-    // Desbloqueo total de audio por si la TV requiere un "clic" inicial con el control remoto
     window.addEventListener('click', () => {
       const actual = elementos[indiceActual];
       if (actual.tagName === 'VIDEO') {
