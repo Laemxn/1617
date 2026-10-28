@@ -19,7 +19,6 @@
       position: relative;
     }
 
-    /* Contenedor principal */
     .slider {
       width: 100vw;
       height: 100vh;
@@ -28,7 +27,6 @@
       overflow: hidden;
     }
 
-    /* Ocultar por defecto con display: none para liberar el decodificador en TV */
     .slide-item {
       position: absolute;
       top: 0;
@@ -40,7 +38,6 @@
       background-color: black;
     }
 
-    /* Elemento activo visible */
     .slide-item.active {
       display: block;
       z-index: 2;
@@ -51,18 +48,16 @@
 
   <div class="slider" id="sliderContainer">
     
-    <!-- Índice 0: Video de Entrada -->
-    <video class="slide-item" src="Entrada.mp4" preload="auto" muted playsinline webkit-playsinline></video>
+    <!-- Quitamos el muted estricto de aquí para permitir audio -->
+    <video class="slide-item" src="Entrada.mp4" preload="auto" playsinline webkit-playsinline></video>
     
-    <!-- Índices 1 al 5: Imágenes intermedias -->
     <img class="slide-item" src="imagen1.png" alt="Imagen 1">
     <img class="slide-item" src="imagen2.png" alt="Imagen 2">
     <img class="slide-item" src="imagen3.png" alt="Imagen 3">
     <img class="slide-item" src="imagen4.png" alt="Imagen 4">
     <img class="slide-item" src="imagen5.png" alt="Imagen 5">
 
-    <!-- Índice 6: Video Final -->
-    <video class="slide-item" src="Final.mp4" preload="auto" muted playsinline webkit-playsinline></video>
+    <video class="slide-item" src="Final.mp4" preload="auto" playsinline webkit-playsinline></video>
     
   </div>
 
@@ -77,7 +72,6 @@
       clearTimeout(temporizador);
       clearTimeout(timeoutSeguridadVideo);
 
-      // Pausar y ocultar todos los elementos
       elementos.forEach((el) => {
         if (el.tagName === 'VIDEO') {
           el.pause();
@@ -86,53 +80,54 @@
         el.classList.remove('active');
       });
 
-      // Activar el elemento actual
       const actual = elementos[indice];
       actual.classList.add('active');
 
       if (actual.tagName === 'VIDEO') {
         try {
-          actual.load(); // Forzar carga en el navegador de la TV
+          actual.load();
           actual.currentTime = 0;
           
+          // Truco para Smart TV: Forzar el sonido activado mediante JS en tiempo de ejecución
+          actual.muted = false; 
+          actual.volume = 1.0; // Volumen al máximo
+
           let playPromise = actual.play();
           if (playPromise !== undefined) {
             playPromise.then(() => {
-              console.log("Reproduciendo video índice:", indice);
+              console.log("Reproduciendo video con audio, índice:", indice);
             }).catch(error => {
-              console.log("Error de reproducción automática en TV, avanzando...", error);
-              avanzarSiguiente();
+              console.log("Bloqueo de audio detectado por la TV, intentando reproducir en silencio...", error);
+              // Plan de respaldo: Si la TV bloquea el audio por políticas de autoplay, lo silencia para que al menos el video corra
+              actual.muted = true;
+              actual.play();
             });
           }
 
-          // Cuando el video termina correctamente
           actual.onended = () => {
             actual.onended = null;
             clearTimeout(timeoutSeguridadVideo);
             avanzarSiguiente();
           };
 
-          // Temporizador de seguridad por si el evento onended falla en la TV
-          let duracionEstimadaMs = 15000; // 15 segundos por defecto
+          let duracionEstimadaMs = 15000;
           if (!isNaN(actual.duration) && actual.duration > 0) {
             duracionEstimadaMs = (actual.duration * 1000) + 1000;
           }
 
           timeoutSeguridadVideo = setTimeout(() => {
             if (actual.tagName === 'VIDEO' && !actual.paused) {
-              console.log("Seguridad de video activada, forzando avance.");
               actual.pause();
               avanzarSiguiente();
             }
           }, duracionEstimadaMs);
 
         } catch (e) {
-          console.log("Excepción al reproducir video:", e);
+          console.log("Excepción al reproducir video con audio:", e);
           avanzarSiguiente();
         }
 
       } else {
-        // Si es imagen, dura exactamente 10 segundos
         temporizador = setTimeout(() => {
           avanzarSiguiente();
         }, 10000);
@@ -141,12 +136,9 @@
 
     function avanzarSiguiente() {
       indiceActual++;
-      
-      // Si llega al final del arreglo (pasa del último elemento), reinicia la secuencia completa desde 0 (Entrada.mp4)
       if (indiceActual >= totalElementos) {
         indiceActual = 0; 
       }
-      
       mostrarElemento(indiceActual);
     }
 
@@ -158,16 +150,15 @@
           const audioCtx = new AudioContext();
           const oscillator = audioCtx.createOscillator();
           const gainNode = audioCtx.createGain();
-          gainNode.gain.value = 0.00001; // Volumen imperceptible
+          gainNode.gain.value = 0.00001;
           oscillator.connect(gainNode);
           gainNode.connect(audioCtx.destination);
           oscillator.start();
         }
       } catch (e) {
-        console.log("Anti-hibernación por audio no soportado", e);
+        console.log(e);
       }
 
-      // Estímulo periódico para mantener activo el navegador de la TV
       setInterval(() => {
         const dummyDiv = document.createElement('div');
         dummyDiv.style.opacity = '0';
@@ -176,7 +167,6 @@
       }, 30000);
     }
 
-    // Iniciar la secuencia al cargar la página
     window.addEventListener('DOMContentLoaded', () => {
       iniciarAntiHibernacion();
       setTimeout(() => {
@@ -184,11 +174,14 @@
       }, 1000);
     });
 
-    // Desbloqueo manual por interacción
+    // Desbloqueo total de audio por si la TV requiere un "clic" inicial con el control remoto
     window.addEventListener('click', () => {
       const actual = elementos[indiceActual];
-      if (actual.tagName === 'VIDEO' && actual.paused) {
-        actual.play().catch(e => console.log(e));
+      if (actual.tagName === 'VIDEO') {
+        actual.muted = false;
+        if (actual.paused) {
+          actual.play().catch(e => console.log(e));
+        }
       }
     }, { once: true });
   </script>
