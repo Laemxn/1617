@@ -19,7 +19,7 @@
       position: relative;
     }
 
-    /* Contenedor principal que ocupa toda la pantalla */
+    /* Contenedor principal */
     .slider {
       width: 100vw;
       height: 100vh;
@@ -28,24 +28,21 @@
       overflow: hidden;
     }
 
-    /* Cada elemento (imagen o video) se superpone en el mismo espacio exacto */
+    /* Ocultar por defecto con display: none para liberar el decodificador en TV */
     .slide-item {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.8s ease-in-out;
+      display: none;
       object-fit: fill;
       background-color: black;
     }
 
     /* Elemento activo visible */
     .slide-item.active {
-      opacity: 1;
-      visibility: visible;
+      display: block;
       z-index: 2;
     }
   </style>
@@ -73,49 +70,66 @@
     const elementos = document.querySelectorAll('.slide-item');
     const totalElementos = elementos.length;
     let indiceActual = 0;
-    let temporizador;
+    let temporizador = null;
+    let timeoutSeguridadVideo = null;
 
     function mostrarElemento(indice) {
       clearTimeout(temporizador);
+      clearTimeout(timeoutSeguridadVideo);
 
-      // Pausar y resetear todos los videos primero
-      elementos.forEach((el, i) => {
+      // Pausar y ocultar todos los elementos
+      elementos.forEach((el) => {
         if (el.tagName === 'VIDEO') {
           el.pause();
           el.currentTime = 0;
         }
-        // Quitar la clase activa de todos
         el.classList.remove('active');
       });
 
-      // Activar solo el elemento actual
+      // Activar el elemento actual
       const actual = elementos[indice];
       actual.classList.add('active');
 
       if (actual.tagName === 'VIDEO') {
-        // Asegurar que el video esté listo para reproducirse
-        actual.currentTime = 0;
-        
-        let playPromise = actual.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            console.log("Reproduciendo video índice:", indice);
-          }).catch(error => {
-            console.log("Error al reproducir video en la TV, saltando:", error);
+        try {
+          actual.load(); // Forzar al navegador de la TV a cargar el archivo de video
+          actual.currentTime = 0;
+          
+          let playPromise = actual.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              console.log("Reproduciendo video índice:", indice);
+            }).catch(error => {
+              console.log("Error de reproducción automática en TV, avanzando...", error);
+              avanzarSiguiente();
+            });
+          }
+
+          // Evento normal cuando el video termina
+          actual.onended = () => {
+            actual.onended = null;
+            clearTimeout(timeoutSeguridadVideo);
             avanzarSiguiente();
-          });
+          };
+
+          // Temporizador de seguridad por si el evento onended falla en la TV (calculado de forma estimada o por duración real)
+          let duracionEstimadaMs = 15000; // 15 segundos por defecto como respaldo
+          if (!isNaN(actual.duration) && actual.duration > 0) {
+            duracionEstimadaMs = (actual.duration * 1000) + 1000;
+          }
+
+          timeoutSeguridadVideo = setTimeout(() => {
+            if (actual.tagName === 'VIDEO' && !actual.paused) {
+              console.log("Seguridad de video activada, forzando avance.");
+              actual.pause();
+              avanzarSiguiente();
+            }
+          }, duracionEstimadaMs);
+
+        } catch (e) {
+          console.log("Excepción al reproducir video:", e);
+          avanzarSiguiente();
         }
-
-        // Cuando el video termine, avanza al siguiente
-        actual.onended = () => {
-          actual.onended = null;
-          avanzarSiguiente();
-        };
-
-        actual.onerror = () => {
-          console.log("Error de formato de video en TV o archivo no encontrado, saltando...");
-          avanzarSiguiente();
-        };
 
       } else {
         // Si es imagen, dura exactamente 10 segundos
@@ -128,7 +142,7 @@
     function avanzarSiguiente() {
       indiceActual++;
       
-      // Si llega al final, regresa a la imagen 1 (índice 1) evitando repetir "Entrada.mp4"
+      // Si llega al final, regresa a la imagen 1 (índice 1) saltando "Entrada.mp4"
       if (indiceActual >= totalElementos) {
         indiceActual = 1; 
       }
@@ -136,15 +150,42 @@
       mostrarElemento(indiceActual);
     }
 
+    // --- ANTI-HIBERNACIÓN (Evita que la TV entre en modo suspensión) ---
+    function iniciarAntiHibernacion() {
+      try {
+        // Crear un contexto de audio silencioso para mantener activo el motor multimedia
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          const audioCtx = new AudioContext();
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          gainNode.gain.value = 0.00001; // Volumen imperceptible
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          oscillator.start();
+        }
+      } catch (e) {
+        console.log("Anti-hibernación por audio no soportado", e);
+      }
+
+      // Intervalo de actividad en segundo plano para evitar pausa por inactividad del navegador
+      setInterval(() => {
+        const dummyDiv = document.createElement('div');
+        dummyDiv.style.opacity = '0';
+        document.body.appendChild(dummyDiv);
+        setTimeout(() => dummyDiv.remove(), 100);
+      }, 30000); // Cada 30 segundos
+    }
+
     // Iniciar la secuencia al cargar la página
     window.addEventListener('DOMContentLoaded', () => {
-      // Pequeño retardo para asegurar que el DOM de la TV esté listo
+      iniciarAntiHibernacion();
       setTimeout(() => {
         mostrarElemento(indiceActual);
-      }, 500);
+      }, 1000);
     });
 
-    // Truco de respaldo: Si la TV requiere interacción táctil o con control remoto para desbloquear el motor multimedia
+    // Desbloqueo manual por si el navegador requiere interacción inicial
     window.addEventListener('click', () => {
       const actual = elementos[indiceActual];
       if (actual.tagName === 'VIDEO' && actual.paused) {
