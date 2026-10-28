@@ -51,17 +51,17 @@
 
   <div class="slider" id="sliderContainer">
     
-    <!-- 1. Video de Entrada -->
+    <!-- Índice 0: Video de Entrada -->
     <video class="slide-item" src="Entrada.mp4" preload="auto" muted playsinline webkit-playsinline></video>
     
-    <!-- 2. Imágenes intermedias -->
+    <!-- Índices 1 al 5: Imágenes intermedias -->
     <img class="slide-item" src="imagen1.png" alt="Imagen 1">
     <img class="slide-item" src="imagen2.png" alt="Imagen 2">
     <img class="slide-item" src="imagen3.png" alt="Imagen 3">
     <img class="slide-item" src="imagen4.png" alt="Imagen 4">
     <img class="slide-item" src="imagen5.png" alt="Imagen 5">
 
-    <!-- 3. Video Final -->
+    <!-- Índice 6: Video Final -->
     <video class="slide-item" src="Final.mp4" preload="auto" muted playsinline webkit-playsinline></video>
     
   </div>
@@ -92,7 +92,7 @@
 
       if (actual.tagName === 'VIDEO') {
         try {
-          actual.load(); // Forzar al navegador de la TV a cargar el archivo de video
+          actual.load(); // Forzar carga en el navegador de la TV
           actual.currentTime = 0;
           
           let playPromise = actual.play();
@@ -105,15 +105,15 @@
             });
           }
 
-          // Evento normal cuando el video termina
+          // Cuando el video termina correctamente
           actual.onended = () => {
             actual.onended = null;
             clearTimeout(timeoutSeguridadVideo);
             avanzarSiguiente();
           };
 
-          // Temporizador de seguridad por si el evento onended falla en la TV (calculado de forma estimada o por duración real)
-          let duracionEstimadaMs = 15000; // 15 segundos por defecto como respaldo
+          // Temporizador de seguridad por si el evento onended falla en la TV
+          let duracionEstimadaMs = 15000; // 15 segundos por defecto
           if (!isNaN(actual.duration) && actual.duration > 0) {
             duracionEstimadaMs = (actual.duration * 1000) + 1000;
           }
@@ -142,18 +142,17 @@
     function avanzarSiguiente() {
       indiceActual++;
       
-      // Si llega al final, regresa a la imagen 1 (índice 1) saltando "Entrada.mp4"
+      // Si llega al final del arreglo (pasa del último elemento), reinicia la secuencia completa desde 0 (Entrada.mp4)
       if (indiceActual >= totalElementos) {
-        indiceActual = 1; 
+        indiceActual = 0; 
       }
       
       mostrarElemento(indiceActual);
     }
 
-    // --- ANTI-HIBERNACIÓN (Evita que la TV entre en modo suspensión) ---
+    // --- SISTEMA ANTI-HIBERNACIÓN ---
     function iniciarAntiHibernacion() {
       try {
-        // Crear un contexto de audio silencioso para mantener activo el motor multimedia
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) {
           const audioCtx = new AudioContext();
@@ -168,13 +167,13 @@
         console.log("Anti-hibernación por audio no soportado", e);
       }
 
-      // Intervalo de actividad en segundo plano para evitar pausa por inactividad del navegador
+      // Estímulo periódico para mantener activo el navegador de la TV
       setInterval(() => {
         const dummyDiv = document.createElement('div');
         dummyDiv.style.opacity = '0';
         document.body.appendChild(dummyDiv);
         setTimeout(() => dummyDiv.remove(), 100);
-      }, 30000); // Cada 30 segundos
+      }, 30000);
     }
 
     // Iniciar la secuencia al cargar la página
@@ -185,7 +184,7 @@
       }, 1000);
     });
 
-    // Desbloqueo manual por si el navegador requiere interacción inicial
+    // Desbloqueo manual por interacción
     window.addEventListener('click', () => {
       const actual = elementos[indiceActual];
       if (actual.tagName === 'VIDEO' && actual.paused) {
