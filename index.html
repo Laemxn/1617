@@ -48,27 +48,24 @@
 
   <div class="slider" id="sliderContainer">
     
-    <!-- Entrada -->
-    <video class="slide-item" src="Entrada.mp4" preload="auto" playsinline webkit-playsinline muted></video>
+    <!-- Índice 0 -->
+    <video class="slide-item" src="Entrada.mp4" preload="auto" playsinline webkit-playsinline></video>
     
-    <!-- Imágenes -->
+    <!-- Índices 1 al 5 -->
     <img class="slide-item" src="imagen1.png" alt="Imagen 1">
     <img class="slide-item" src="imagen2.png" alt="Imagen 2">
     <img class="slide-item" src="imagen3.png" alt="Imagen 3">
     <img class="slide-item" src="imagen4.png" alt="Imagen 4">
     <img class="slide-item" src="imagen5.png" alt="Imagen 5">
 
-    <!-- Video Extra (con .MP4 en mayúsculas tal como está en tu repositorio) -->
-    <video class="slide-item" src="videoExtra.MP4" preload="auto" playsinline webkit-playsinline muted></video>
-
-    <!-- Final -->
-    <video class="slide-item" src="Final.mp4" preload="auto" playsinline webkit-playsinline muted></video>
+    <!-- Índice 6 -->
+    <video class="slide-item" src="Final.mp4" preload="auto" playsinline webkit-playsinline></video>
     
   </div>
 
   <script>
     const elementos = document.querySelectorAll('.slide-item');
-    const totalElementos = elementos.length;
+    const totalElementos = elementos.length; // Debe ser 7 en total
     let indiceActual = 0;
     let temporizador = null;
     let timeoutSeguridadVideo = null;
@@ -90,19 +87,20 @@
 
       if (actual.tagName === 'VIDEO') {
         try {
+          actual.load();
           actual.currentTime = 0;
-          actual.muted = true; 
           
+          actual.muted = false; 
+          actual.volume = 1.0;
+
           let playPromise = actual.play();
           if (playPromise !== undefined) {
             playPromise.then(() => {
-              console.log("Reproduciendo video correctamente en índice:", indice);
-              setTimeout(() => {
-                actual.muted = false;
-              }, 200);
+              console.log("Reproduciendo video en índice:", indice);
             }).catch(error => {
-              console.log("Error al reproducir video:", error);
-              avanzarSiguiente();
+              console.log("Audio bloqueado, intentando en silencio...", error);
+              actual.muted = true;
+              actual.play();
             });
           }
 
@@ -140,6 +138,7 @@
     function avanzarSiguiente() {
       indiceActual++;
       
+      // Si el índice supera el último elemento (llega a 7), se reinicia a 0 (Entrada.mp4)
       if (indiceActual >= totalElementos) {
         indiceActual = 0; 
       }
@@ -191,3 +190,4 @@
   </script>
 </body>
 </html>
+ Quiero agregar otro video extra 
