@@ -49,7 +49,7 @@
   <div class="slider" id="sliderContainer">
     
     <!-- Entrada -->
-    <video class="slide-item" src="Entrada.mp4" preload="auto" playsinline webkit-playsinline></video>
+    <video class="slide-item" src="Entrada.mp4" preload="auto" playsinline webkit-playsinline muted></video>
     
     <!-- Imágenes -->
     <img class="slide-item" src="imagen1.png" alt="Imagen 1">
@@ -58,17 +58,17 @@
     <img class="slide-item" src="imagen4.png" alt="Imagen 4">
     <img class="slide-item" src="imagen5.png" alt="Imagen 5">
 
-    <!-- Video Extra (Asegúrate de que en GitHub el archivo se llame exactamente videoExtra.mp4 en minúsculas, o cambia la extensión aquí si prefieres .MP4) -->
-    <video class="slide-item" src="videoExtra.mp4" preload="auto" playsinline webkit-playsinline></video>
+    <!-- Video Extra (con .MP4 en mayúsculas tal como está en tu repositorio) -->
+    <video class="slide-item" src="videoExtra.MP4" preload="auto" playsinline webkit-playsinline muted></video>
 
     <!-- Final -->
-    <video class="slide-item" src="Final.mp4" preload="auto" playsinline webkit-playsinline></video>
+    <video class="slide-item" src="Final.mp4" preload="auto" playsinline webkit-playsinline muted></video>
     
   </div>
 
   <script>
     const elementos = document.querySelectorAll('.slide-item');
-    const totalElementos = elementos.length; // Se ajusta automáticamente al número total de elementos
+    const totalElementos = elementos.length;
     let indiceActual = 0;
     let temporizador = null;
     let timeoutSeguridadVideo = null;
@@ -90,20 +90,19 @@
 
       if (actual.tagName === 'VIDEO') {
         try {
-          actual.load();
           actual.currentTime = 0;
+          actual.muted = true; 
           
-          actual.muted = false; 
-          actual.volume = 1.0;
-
           let playPromise = actual.play();
           if (playPromise !== undefined) {
             playPromise.then(() => {
-              console.log("Reproduciendo video en índice:", indice);
+              console.log("Reproduciendo video correctamente en índice:", indice);
+              setTimeout(() => {
+                actual.muted = false;
+              }, 200);
             }).catch(error => {
-              console.log("Audio bloqueado, intentando en silencio...", error);
-              actual.muted = true;
-              actual.play();
+              console.log("Error al reproducir video:", error);
+              avanzarSiguiente();
             });
           }
 
