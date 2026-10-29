@@ -48,24 +48,27 @@
 
   <div class="slider" id="sliderContainer">
     
-    <!-- Índice 0 -->
+    <!-- Entrada -->
     <video class="slide-item" src="Entrada.mp4" preload="auto" playsinline webkit-playsinline></video>
     
-    <!-- Índices 1 al 5 -->
+    <!-- Imágenes -->
     <img class="slide-item" src="imagen1.png" alt="Imagen 1">
     <img class="slide-item" src="imagen2.png" alt="Imagen 2">
     <img class="slide-item" src="imagen3.png" alt="Imagen 3">
     <img class="slide-item" src="imagen4.png" alt="Imagen 4">
     <img class="slide-item" src="imagen5.png" alt="Imagen 5">
 
-    <!-- Índice 6 -->
+    <!-- Video Extra -->
+    <video class="slide-item" src="videoExtra.mp4" preload="auto" playsinline webkit-playsinline></video>
+
+    <!-- Final -->
     <video class="slide-item" src="Final.mp4" preload="auto" playsinline webkit-playsinline></video>
     
   </div>
 
   <script>
     const elementos = document.querySelectorAll('.slide-item');
-    const totalElementos = elementos.length; // Debe ser 7 en total
+    const totalElementos = elementos.length; // Se ajusta automáticamente al número total de elementos
     let indiceActual = 0;
     let temporizador = null;
     let timeoutSeguridadVideo = null;
@@ -138,7 +141,6 @@
     function avanzarSiguiente() {
       indiceActual++;
       
-      // Si el índice supera el último elemento (llega a 7), se reinicia a 0 (Entrada.mp4)
       if (indiceActual >= totalElementos) {
         indiceActual = 0; 
       }
